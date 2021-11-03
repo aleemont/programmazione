@@ -1,0 +1,5 @@
+if(((((ball.p.x == pad1.p.x + -1) || ((ball.p.x == pad1.p.x || (ball.p.x == pad1.p.x + 1)))) &&
+         (ball.p.y == pad1.p.y + -1)) ||
+        ((((ball.p.x == pad1.p.x + -1 || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
+         (ball.p.y == pad1.p.y + pad1.len)))) ||
+       (((ball.p.x == pad1.p.x + 1 && (pad1.p.y <= ball.p.y)) && (ball.p.y <= pad1.p.y + -1 + pad1.len))))
