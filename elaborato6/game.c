@@ -2,6 +2,7 @@
 #ifdef STUD
 
 #include "game.h"
+#include <stdio.h>
 
 #define LEFT  -1
 #define RIGHT  1
@@ -57,9 +58,9 @@ void setup_game(int height, int width,
 
 /* Moves pad1 one position up. */
 void move_pad1_up(void){
-	if((0 < pad1.p.y) && ((((ball.p.x != pad1.p.x + -1 && 
-		(ball.p.x != pad1.p.x)) && (ball.p.x != pad1.p.x + 1)) ||
-      	(ball.p.y !=pad1.p.y + -1))))
+	if((0 < pad1.p.y) &&
+     ((((ball.p.x != pad1.p.x + -1 && (ball.p.x != pad1.p.x)) && (ball.p.x != pad1.p.x + 1)) ||
+      (ball.p.y != pad1.p.y + -1))))
 
 		pad1.p.y += UP;
 	
@@ -68,9 +69,9 @@ void move_pad1_up(void){
 
 /* Moves pad2 one poisiton up */
 void move_pad2_up(void){
-	if((0 < pad2.p.y) && ((((ball.p.x != pad2.p.x + -1 && (ball.p.x != pad2.p.x)) && 
-	 	(ball.p.x != pad2.p.x + -2)) ||
-      	(ball.p.y != pad2.p.y + -1))))
+	if((0 < pad1.p.y) &&
+	((((ball.p.x != pad2.p.x + -1 && (ball.p.x != pad2.p.x)) && (ball.p.x != pad2.p.x + -2)) ||
+      (ball.p.y != pad2.p.y + -1))))
 		
 		pad2.p.y += UP;
 
@@ -79,10 +80,9 @@ void move_pad2_up(void){
 
 /* Moves pad1 one position down. */
 void move_pad1_down(void){
-	if((pad1.p.y + -1 + _pad_len < max_height) &&
-     	((((ball.p.x != pad1.p.x + -1 && (ball.p.x != pad1.p.x))
-	 	&& (ball.p.x != pad1.p.x + 1)) ||
-      	(ball.p.y != pad1.p.y + _pad_len))))
+	if((pad1.p.y -1 + _pad_len < max_height) &&
+     ((((ball.p.x != pad1.p.x -1 && (ball.p.x != pad1.p.x)) && (ball.p.x != pad1.p.x + 1)) ||
+      (ball.p.y != pad1.p.y + _pad_len))))
 
 		pad1.p.y += DOWN;
 	
@@ -91,8 +91,8 @@ void move_pad1_down(void){
 
 /* Moves pad2 one position down. */
 void move_pad2_down(void){
-	if((pad2.p.y + -1 + _pad_len < max_height) &&
-     ((((ball.p.x != pad2.p.x + -1 && (ball.p.x != pad2.p.x)) && (ball.p.x != pad2.p.x + -2)) ||
+	if((pad2.p.y -1 + _pad_len < max_height) &&
+     ((((ball.p.x != pad2.p.x -1 && (ball.p.x != pad2.p.x)) && (ball.p.x != pad2.p.x -2)) ||
       (ball.p.y != pad2.p.y + _pad_len))))
 
 		pad2.p.y += DOWN;
@@ -114,19 +114,11 @@ void move_ball(void){
   }
 
     /*Tocco pieno pad1*/
-	if(((((ball.p.x == pad1.p.x + -1) || ((ball.p.x == pad1.p.x || (ball.p.x == pad1.p.x + 1)))) &&
-         (ball.p.y == pad1.p.y + -1)) ||
-        ((((ball.p.x == pad1.p.x + -1 || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-         (ball.p.y == pad1.p.y + _pad_len)))) ||
-       (((ball.p.x == pad1.p.x + 1 && (pad1.p.y <= ball.p.y)) && (ball.p.y <= pad1.p.y + -1 + _pad_len)))){
+	if(ball.p.x == (pad1.p.x + 1) && (ball.p.y >= pad1.p.y && ball.p.y <= pad1.p.y + _pad_len)){
 		ball.d.x = RIGHT;
 	}
     /*Tocco pieno pad2*/
-	if((((((ball.p.x == pad2.p.x + -1) || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-         (ball.p.y == pad2.p.y + -1)) ||
-        ((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-         (ball.p.y == pad2.p.y + _pad_len)))) ||
-       (((ball.p.x == pad2.p.x + -2 && (pad2.p.y <= ball.p.y)) && (ball.p.y <= pad2.p.y + -1 + _pad_len)))){
+	if(ball.p.x == (pad2.p.x - 2) && (ball.p.y >= pad2.p.y && ball.p.y <= pad2.p.y + _pad_len)){
 		ball.d.x = LEFT;
 	}
     /*Tocco sopra pad1*/
@@ -161,10 +153,13 @@ void move_ball(void){
     if (ball.p.y == max_height) {
       ball.d.y = UP;
     }
-	
+	FILE *out = fopen("ball_pos.csv", "w");
     /* always used */
     ball.p.x += ball.d.x;
     ball.p.y += ball.d.y;
+
+	fprintf(out, "%d,%d", ball.p.x, ball.p.y);
+
 	return;
 }
 
