@@ -10,23 +10,21 @@
 
 typedef struct{
 	struct position p;
-	int len;
 	int score;
-	int max_height;
 } paletta;
 
 typedef struct{
 	struct position p;
 	struct position d;
 	struct position init_pos;
-	struct position init_dir;
-	int max_height;
-	int max_width;
 } palla;
 
 palla ball;
 paletta pad1, pad2;
 
+int max_height;
+int max_width;
+int _pad_len;
 /*Riporta la pallina alla posizione iniziale*/
 static void reset_ball();
 
@@ -34,34 +32,27 @@ void setup_game(int height, int width,
                 struct position ball_pos, struct position ball_dir,
                 struct position pad1_pos, struct position pad2_pos, int pad_len){
 
-						pad1.p.x = pad1_pos.x;
-						pad1.p.y = pad1_pos.y;
-						pad2.p.x = pad2_pos.x;
-						pad2.p.y = pad2_pos.y;
-						
-						pad1.len = pad_len;
-						pad2.len = pad_len;
+					pad1.score = 0;
+					pad2.score = 0;
 
-						pad1.max_height = height;
-						pad2.max_height = height;
+					_pad_len = pad_len;
 
-						ball.p.x = ball_pos.x;
-						ball.p.y = ball_pos.y;
+					max_width = width;
+					max_height = height;
 
-						ball.init_pos.x = ball_pos.x;
-						ball.init_pos.y = ball_pos.y;
+					ball.init_pos.x = ball_pos.x;
+					ball.init_pos.y = ball_pos.y;
+					ball.p.x = ball_pos.x;
+					ball.p.y = ball_pos.y;
 
-						ball.d.x = ball_dir.x;
-						ball.d.y = ball_dir.y;
-						
-						ball.init_dir.x = ball_dir.x;
-						ball.init_dir.y = ball_dir.y;
-						
-						ball.max_height = height;
-						ball.max_width = width;
+					ball.d.y = ball_dir.y;
+					ball.d.x = ball_dir.x;
 
-						pad1.score = 0;
-						pad2.score = 0;
+					pad1.p.y = pad1_pos.y;
+					pad1.p.x = pad1_pos.x;
+					pad2.p.y = pad2_pos.y;
+					pad2.p.x = pad2_pos.x;
+					return;
 				}
 
 /* Moves pad1 one position up. */
@@ -88,10 +79,10 @@ void move_pad2_up(void){
 
 /* Moves pad1 one position down. */
 void move_pad1_down(void){
-	if((pad1.p.y + -1 + pad1.len < pad1.max_height) &&
+	if((pad1.p.y + -1 + _pad_len < max_height) &&
      	((((ball.p.x != pad1.p.x + -1 && (ball.p.x != pad1.p.x))
 	 	&& (ball.p.x != pad1.p.x + 1)) ||
-      	(ball.p.y != pad1.p.y + pad1.len))))
+      	(ball.p.y != pad1.p.y + _pad_len))))
 
 		pad1.p.y += DOWN;
 	
@@ -100,9 +91,9 @@ void move_pad1_down(void){
 
 /* Moves pad2 one position down. */
 void move_pad2_down(void){
-	if((pad2.p.y + -1 + pad2.len < pad2.max_height) &&
+	if((pad2.p.y + -1 + _pad_len < max_height) &&
      ((((ball.p.x != pad2.p.x + -1 && (ball.p.x != pad2.p.x)) && (ball.p.x != pad2.p.x + -2)) ||
-      (ball.p.y != pad2.p.y + pad2.len))))
+      (ball.p.y != pad2.p.y + _pad_len))))
 
 		pad2.p.y += DOWN;
 	
@@ -112,7 +103,7 @@ void move_pad2_down(void){
 /* Moves the ball in the current direction */
 void move_ball(void){
 
-    if ((ball.p.x == 0) || (ball.p.x == ball.max_width -1)) {
+    if ((ball.p.x == 0) || (ball.p.x == max_width - 1)) {
     if (ball.p.x == 0) {
       pad2.score = pad2.score + 1;
     }
@@ -126,55 +117,55 @@ void move_ball(void){
 	if(((((ball.p.x == pad1.p.x + -1) || ((ball.p.x == pad1.p.x || (ball.p.x == pad1.p.x + 1)))) &&
          (ball.p.y == pad1.p.y + -1)) ||
         ((((ball.p.x == pad1.p.x + -1 || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-         (ball.p.y == pad1.p.y + pad1.len)))) ||
-       (((ball.p.x == pad1.p.x + 1 && (pad1.p.y <= ball.p.y)) && (ball.p.y <= pad1.p.y + -1 + pad1.len)))){
+         (ball.p.y == pad1.p.y + _pad_len)))) ||
+       (((ball.p.x == pad1.p.x + 1 && (pad1.p.y <= ball.p.y)) && (ball.p.y <= pad1.p.y + -1 + _pad_len)))){
 		ball.d.x = RIGHT;
 	}
     /*Tocco pieno pad2*/
 	if((((((ball.p.x == pad2.p.x + -1) || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
          (ball.p.y == pad2.p.y + -1)) ||
         ((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-         (ball.p.y == pad2.p.y + pad2.len)))) ||
-       (((ball.p.x == pad2.p.x + -2 && (pad2.p.y <= ball.p.y)) && (ball.p.y <= pad2.p.y + -1 + pad2.len)))){
+         (ball.p.y == pad2.p.y + _pad_len)))) ||
+       (((ball.p.x == pad2.p.x + -2 && (pad2.p.y <= ball.p.y)) && (ball.p.y <= pad2.p.y + -1 + _pad_len)))){
 		ball.d.x = LEFT;
 	}
     /*Tocco sopra pad1*/
-	if(ball.p.y == pad1.p.y || ball.p.y == pad1.p.y + 1 || ball.p.y == pad2.p.y || ball.p.y == pad2.p.y + 1){
-		if((((ball.p.x == pad1.p.x + -1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-			(ball.p.y == pad1.p.y + pad1.len)){
+		if(((((ball.p.x == pad1.p.x + - 1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
+        (ball.p.y == pad1.p.y + _pad_len))){
 			ball.d.y = UP;
 			ball.d.x = RIGHT;
 		}
 		/*Tocco sopra pad2*/
-		if(((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-			(ball.p.y == pad2.p.y + pad2.len)){
+		if((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
+        (ball.p.y == pad2.p.y + _pad_len))){
 			ball.d.y = DOWN;
 			ball.d.x = RIGHT;
 		}
+
 		/*Tocco sotto pad1*/
-		if((((ball.p.x == pad1.p.x + -1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-			(ball.p.y == pad1.p.y + -1)) {
+		if(((((ball.p.x == pad1.p.x + -1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
+          (ball.p.y == pad1.p.y + -1))){
 			ball.d.y = UP;
 			ball.d.x = LEFT;
 		}
 		/*Tocco sotto pad2*/
 		if((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-			(ball.p.y == pad2.p.y + -1))){
+          (ball.p.y == pad2.p.y + -1))){
 			ball.d.y = DOWN;
 			ball.d.x = LEFT;
 		}
-	}
 	/*Rimbalzo bordi*/
 	if (ball.p.y == 0) {
       ball.d.y = DOWN;
     }
-    if (ball.p.y == ball.max_height) {
+    if (ball.p.y == max_height) {
       ball.d.y = UP;
     }
 	
     /* always used */
     ball.p.x += ball.d.x;
     ball.p.y += ball.d.y;
+	return;
 }
 
 /* Returns ball current position */
@@ -194,7 +185,7 @@ struct position get_pad2_pos(void){
 
 /* Returns the pad length */
 unsigned int get_pad_len(void){
-	return pad1.len;
+	return _pad_len;
 }
 
 /* Returns pad1 current score */
@@ -210,8 +201,6 @@ unsigned int get_pad2_score(void){
 static void reset_ball(void){
 	ball.p.x = ball.init_pos.x;
 	ball.p.y = ball.init_pos.y;
-	ball.d.x = ball.init_dir.x;
-	ball.d.y = ball.init_dir.y;
 }
 
 #endif
