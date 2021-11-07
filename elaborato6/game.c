@@ -134,14 +134,14 @@ void move_ball(void){
 	}
 	/*Tocco sopra pad2*/
 	if((ball.p.x == pad2.p.x || ball.p.x + 2 == pad2.p.x || ball.p.x + 1 == pad2.p.x) && (ball.p.y == pad2.p.y - 1)){
-		ball.d.y = DOWN;
-		ball.d.x = RIGHT;
+		ball.d.y = UP;
+		ball.d.x = LEFT;
 	}
 
 	/*Tocco sotto pad1*/
 	if((ball.p.x == pad1.p.x || ball.p.x == pad1.p.x + 1 || ball.p.x == pad1.p.x - 1) && (ball.p.y == pad1.p.y + _pad_len)){
-		ball.d.y = UP;
-		ball.d.x = LEFT;
+		ball.d.y = DOWN;
+		ball.d.x = RIGHT;
 	}
 	/*Tocco sotto pad2*/
 	if((ball.p.x == pad2.p.x || ball.p.x + 2 == pad2.p.x || ball.p.x + 1 == pad2.p.x) && (ball.p.y == pad2.p.y + _pad_len)){
