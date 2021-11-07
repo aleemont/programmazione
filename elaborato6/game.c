@@ -9,19 +9,16 @@
 #define UP    -1
 #define DOWN   1
 
-typedef struct{
+static struct{
 	struct position p;
 	int score;
-} paletta;
+} pad1, pad2;
 
-typedef struct{
+static struct{
 	struct position p;
 	struct position d;
 	struct position init_pos;
-} palla;
-
-palla ball;
-paletta pad1, pad2;
+} ball;
 
 int max_height;
 int max_width;
@@ -152,13 +149,9 @@ void move_ball(void){
 		ball.d.x = LEFT;
 	}
 
-	FILE *out = fopen("ball_pos.csv", "w");
     /* always used */
     ball.p.x += ball.d.x;
     ball.p.y += ball.d.y;
-
-	fprintf(out, "%d,%d", ball.p.x, ball.p.y);
-	fclose(out);
 
 	return;
 }
