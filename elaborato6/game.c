@@ -103,15 +103,24 @@ void move_pad2_down(void){
 /* Moves the ball in the current direction */
 void move_ball(void){
 
+	/*Assegnazione punteggio*/
     if ((ball.p.x == 0) || (ball.p.x == max_width - 1)) {
-    if (ball.p.x == 0) {
-      pad2.score = pad2.score + 1;
+		if (ball.p.x == 0) {
+		pad2.score = pad2.score + 1;
+		}
+		else {
+		pad1.score = pad1.score + 1;
+		}
+		reset_ball();
+		return;
+  	}
+
+	/*Rimbalzo bordi*/
+	if (ball.p.y <= 0) {
+        ball.d.y = DOWN;
+    } else if (ball.p.y >= max_height) {
+        ball.d.y = UP;
     }
-    else {
-      pad1.score = pad1.score + 1;
-    }
-    reset_ball();
-  }
 
     /*Tocco pieno pad1*/
 	if(ball.p.x == (pad1.p.x + 1) && (ball.p.y >= pad1.p.y && ball.p.y <= pad1.p.y + _pad_len)){
@@ -122,43 +131,34 @@ void move_ball(void){
 		ball.d.x = LEFT;
 	}
     /*Tocco sopra pad1*/
-		if(((((ball.p.x == pad1.p.x + - 1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-        (ball.p.y == pad1.p.y + _pad_len))){
-			ball.d.y = UP;
-			ball.d.x = RIGHT;
-		}
-		/*Tocco sopra pad2*/
-		if((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-        (ball.p.y == pad2.p.y + _pad_len))){
-			ball.d.y = DOWN;
-			ball.d.x = RIGHT;
-		}
+	if((ball.p.x == pad1.p.x || ball.p.x == pad1.p.x + 1 || ball.p.x == pad1.p.x - 1) && (ball.p.y == pad1.p.y -1)){
+		ball.d.y = UP;
+		ball.d.x = RIGHT;
+	}
+	/*Tocco sopra pad2*/
+	if((ball.p.x == pad2.p.x || ball.p.x + 2 == pad2.p.x || ball.p.x + 1 == pad2.p.x) && (ball.p.y == pad2.p.y - 1)){
+		ball.d.y = DOWN;
+		ball.d.x = RIGHT;
+	}
 
-		/*Tocco sotto pad1*/
-		if(((((ball.p.x == pad1.p.x + -1) || (ball.p.x == pad1.p.x)) || (ball.p.x == pad1.p.x + 1)) &&
-          (ball.p.y == pad1.p.y + -1))){
-			ball.d.y = UP;
-			ball.d.x = LEFT;
-		}
-		/*Tocco sotto pad2*/
-		if((((ball.p.x == pad2.p.x + -1 || (ball.p.x == pad2.p.x)) || (ball.p.x == pad2.p.x + -2)) &&
-          (ball.p.y == pad2.p.y + -1))){
-			ball.d.y = DOWN;
-			ball.d.x = LEFT;
-		}
-	/*Rimbalzo bordi*/
-	if (ball.p.y == 0) {
-      ball.d.y = DOWN;
-    }
-    if (ball.p.y == max_height) {
-      ball.d.y = UP;
-    }
+	/*Tocco sotto pad1*/
+	if((ball.p.x == pad1.p.x || ball.p.x == pad1.p.x + 1 || ball.p.x == pad1.p.x - 1) && (ball.p.y == pad1.p.y + _pad_len)){
+		ball.d.y = UP;
+		ball.d.x = LEFT;
+	}
+	/*Tocco sotto pad2*/
+	if((ball.p.x == pad2.p.x || ball.p.x + 2 == pad2.p.x || ball.p.x + 1 == pad2.p.x) && (ball.p.y == pad2.p.y + _pad_len)){
+		ball.d.y = DOWN;
+		ball.d.x = LEFT;
+	}
+
 	FILE *out = fopen("ball_pos.csv", "w");
     /* always used */
     ball.p.x += ball.d.x;
     ball.p.y += ball.d.y;
 
 	fprintf(out, "%d,%d", ball.p.x, ball.p.y);
+	fclose(out);
 
 	return;
 }
