@@ -6,7 +6,7 @@
 #include "ghosts.h"
 #include "pacman.h"
 
-static const struct position UNK_POSITION = {-1,-1}; // Set unknown position to (UINT_MAX,UINT_MAX)
+static const struct position UNK_POSITION = {-1,-1}; /* Set unknown position to (UINT_MAX,UINT_MAX)*/
 
 enum pacman_action {EAT_PILL, EAT_FOOD, TOUCH_GHOST, PACMAN_MOVE};
 enum ghost_action {TOUCH_PACMAN, BACK_HOME, GHOST_MOVE};

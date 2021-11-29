@@ -47,9 +47,9 @@
 #define GHOST_SCORE 100 
 
 /* Game timeouts */
-#define POWER_TIMEOUT 200 // 100 pacman moves and 100 ghosts moves 
+#define POWER_TIMEOUT 200 /* 100 pacman moves and 100 ghosts moves */
 #define POWER_TIMEOUT_WARNING 160 
-#define TIMEOUT  150 // getch() timeotut (ms)
+#define TIMEOUT  150 /* getch() timeotut (ms) */
 
 /* Game keys */
 #define QUIT_KEY    'q'

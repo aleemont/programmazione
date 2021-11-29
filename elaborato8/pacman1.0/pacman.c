@@ -2,16 +2,7 @@
 #include "pacman.h"
 #include "ghosts.h"
 
-static const struct position UNK_POSITION = {-1,-1}; // Set unknown position to (UINT_MAX,UINT_MAX)
-
-struct pacman {
-	int status;
-	int dir;
-	struct position pos;
-	char **A;
-	unsigned int nrow;
-	unsigned int ncol;
-};
+static const struct position UNK_POSITION = {-1,-1}; /* Set unknown position to (UINT_MAX,UINT_MAX)*/
 
 
 /* Compute the new position toward direction dir in a toroidal world of size nrow*ncol */
@@ -72,7 +63,7 @@ enum pacman_status pacman_get_status(struct pacman *P) {
 
 struct position pacman_move(struct pacman *P, enum direction dir) {
 	if(update_pacman_position(P,dir) != 0)
-		if(P->dir != dir) // try to move in the current direction
+		if(P->dir != dir) /* try to move in the current direction */
 		update_pacman_position(P,P->dir);
 			
 	return P->pos;

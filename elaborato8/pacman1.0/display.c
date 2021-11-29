@@ -3,7 +3,7 @@
 
 #define SLEEP_TIME 0.5
 #define BLINK
-//#define WIN
+#define WIN
 
 #ifdef WIN
 #include <time.h>
@@ -53,9 +53,9 @@ void display_open(void) {
 	initscr();
 	cbreak();
 	noecho();               
-	keypad(stdscr, TRUE); // make keys work
-	curs_set(0);          // hide cursor
-	timeout(TIMEOUT);     // Sets the waiting time for getch()
+	keypad(stdscr, TRUE); /* make keys work*/
+	curs_set(0);          /* hide cursor*/
+	timeout(TIMEOUT);     /* Sets the waiting time for getch()*/
 	
 	start_color();
 
@@ -140,9 +140,9 @@ static void display_pacman_eat(struct position pos) {
 	int i = pos.i, j = pos.j;		
 
 	attron(COLOR_PAIR(PILL_PAIR));
-	//attron(COLOR_PAIR(PACMAN_PAIR));
+	/*attron(COLOR_PAIR(PACMAN_PAIR));*/
 	mvaddch(START_ROW+i, START_COL+j,'O');
-	//attroff(COLOR_PAIR(PACMAN_PAIR));
+	/*attroff(COLOR_PAIR(PACMAN_PAIR));*/
 	attroff(COLOR_PAIR(PILL_PAIR));
 }
 
@@ -150,23 +150,23 @@ static void display_pacman(struct position pos, enum direction dir) {
 	int i = pos.i, j = pos.j;
 
 	attron(COLOR_PAIR(PILL_PAIR));
-	//attron(COLOR_PAIR(PACMAN_PAIR));
+	/*attron(COLOR_PAIR(PACMAN_PAIR));*/
 	switch(dir) {
-		case LEFT:  //mvaddch(START_ROW+i, START_COL+j,ACS_RARROW);
+		case LEFT:  /*mvaddch(START_ROW+i, START_COL+j,ACS_RARROW);*/
 								mvaddch(START_ROW+i, START_COL+j,PACMAN_LSYM);
 								break;
-		case RIGHT: //mvaddch(START_ROW+i, START_COL+j,ACS_LARROW);
+		case RIGHT: /*mvaddch(START_ROW+i, START_COL+j,ACS_LARROW);*/
 								mvaddch(START_ROW+i, START_COL+j,PACMAN_RSYM);
 								break;
-		case UP:    //mvaddch(START_ROW+i, START_COL+j,ACS_DARROW);
+		case UP:    /*mvaddch(START_ROW+i, START_COL+j,ACS_DARROW);*/
 								mvaddch(START_ROW+i, START_COL+j,PACMAN_USYM);
 								break;
-		case DOWN:  //mvaddch(START_ROW+i, START_COL+j,ACS_UARROW);
+		case DOWN:  /*mvaddch(START_ROW+i, START_COL+j,ACS_UARROW);*/
 								mvaddch(START_ROW+i, START_COL+j,PACMAN_DSYM);
 								break;
 		case UNK_DIRECTION: break;
 	}
-	//attroff(COLOR_PAIR(PACMAN_PAIR));
+	/*attroff(COLOR_PAIR(PACMAN_PAIR));*/
 	attroff(COLOR_PAIR(PILL_PAIR));
 }
 
@@ -234,13 +234,13 @@ void display_arena(void) {
 		erase();
 		display_board(M,nrow,ncol);
 
-		// Print ghosts
+		/* Print ghosts*/
 		for(g = 0; g < ghost_num; g++) {
 				pos = arena_ghost_position(g); pos.j *= 3;
 				display_ghost(g,pos,arena_ghost_status(g));
 		}
 		
-		// Print pacman
+		/* Print pacman*/
 		pos = arena_pacman_position(); pos.j *= 3;
 		dir = arena_pacman_direction();
 		if((PACMAN_FLAG = ((PACMAN_FLAG + 1) % 2)) || (pos.i == old_pos.i && pos.j == old_pos.j))

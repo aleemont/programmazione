@@ -3,7 +3,14 @@
 
 #include "global.h"
 
-struct pacman; /* Opaque declaration of the pacman datastructure */
+struct pacman {
+	int status;
+	int dir;
+	struct position pos;
+	char **A;
+	unsigned int nrow;
+	unsigned int ncol;
+}; /* Opaque declaration of the pacman datastructure */
 
 /* Create the pacman data structure */
 struct pacman *pacman_setup(void);

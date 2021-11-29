@@ -36,7 +36,7 @@ static int matrix_size(char *file, unsigned int *nrow, unsigned int *ncol) {
 		while((c = fgetc(in)) != EOF) {
 			if(c =='\n') {
 				(*nrow)++;
-				if(*ncol != tmp) // All rows must have the same number of chars
+				if(*ncol != tmp) /* All rows must have the same number of chars */
 					return 1;
 				else
 					tmp = 0;
