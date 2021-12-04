@@ -209,7 +209,8 @@ struct position ghosts_move(struct ghosts* G, struct pacman* P, unsigned int id)
         }
         return G->fantasma[id].pos;
     }
-    struct position p = { 0 }; return p;
+    struct position p = { 0 };
+    return p;
 }
 
 #endif
