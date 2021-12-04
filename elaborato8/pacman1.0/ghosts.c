@@ -12,9 +12,9 @@
 #define IS_WALL(A,pos) (A[pos.i][pos.j] == URCORN_SYM || A[pos.i][pos.j] == ULCORN_SYM || \
                         A[pos.i][pos.j] == VWALL_SYM  || A[pos.i][pos.j] == HWALL_SYM  || \
                         A[pos.i][pos.j] == XWALL_SYM)
-#define ARENA (G->arena)
-#define MAX_ROW ((G->nrows) - 1)
-#define MAX_COL ((G->ncols) - 1)
+#define ARENA arena
+#define MAX_ROW (rows - 1)
+#define MAX_COL (cols - 1)
 #define POS_I(id) (G->fantasma[id].pos.i)
 #define POS_J(id) (G->fantasma[id].pos.j)
 
@@ -39,49 +39,42 @@
 
 struct ghost{
     struct position pos; 
-    unsigned int dir;
-    unsigned int status;
+    enum direction dir;
+    enum ghost_status status;
     unsigned int id;
 };
 
 struct ghosts{
     unsigned int n;
-    char **arena;
-    unsigned int nrows;
-    unsigned int ncols;
     struct ghost *fantasma;
 };
 
-static int a, b, c;
+static char **arena;
+static unsigned int rows, cols, a, b, c;
 
 /* Create the ghosts data structure */
 struct ghosts *ghosts_setup(unsigned int num_ghosts) {
-    srand(time(NULL));
-    unsigned int k, l;
-    register int i;
-    struct ghosts *G=(struct ghosts*) malloc(sizeof(struct ghosts));
-    k = (unsigned int) (rand()*1 + 10) % 2 == 0 ? 1 : -1;
-    l = (unsigned int) (rand()*1 + 10) % 2 == 0 ? 1 : -1;
-    struct position UNK_POSITION = {k,l};
-    if(G != NULL){
-        G->n = num_ghosts;
-        G->nrows = 0;
-        G->ncols = 0;
-        G->arena = NULL;
-        G->fantasma = (struct ghost*) calloc(num_ghosts,sizeof(struct ghost));
-        if(G->fantasma != NULL){
-            for(i = 0; i < num_ghosts; ++i){
-                G->fantasma[i].pos = UNK_POSITION;
-                G->fantasma[i].dir = LEFT;
-            }
-        }
-    }
-    return G;
+  struct ghosts* g  = malloc(sizeof(struct ghosts));
+  if(g == NULL) return NULL;
+  g->fantasma = calloc(num_ghosts, sizeof(struct ghost));
+  g->n = num_ghosts;
+  if(g->fantasma == NULL) return NULL;
+  unsigned int i;
+  for(i = 0; i < g->n; i++) {
+    struct position p = {0, 0};
+    g->fantasma[i].id = i;
+    g->fantasma[i].dir = UNK_DIRECTION;
+    g->fantasma[i].pos = p;
+    g->fantasma[i].status = NORMAL;
+  }
+  return g;
 }
 
 /* Destroy the ghost data structure */
 void ghosts_destroy(struct ghosts *G) {
     if(G != NULL)
+        if(G -> fantasma != NULL)
+            free(G->fantasma);
         free(G);
     return;
     
@@ -90,22 +83,15 @@ void ghosts_destroy(struct ghosts *G) {
 /* Set the arena (A) matrix */
 void ghosts_set_arena(struct ghosts *G, char **A, unsigned int nrow, 
                                                       unsigned int ncol) {
-    if(G != NULL){
-        G->arena = A;
-        G->nrows = nrow;
-        G->ncols = ncol;
-    }
-    for (a = 0; a < G->n; a++) {
-            if (rand() % 4 == 0 && A_UP(c) != 'x') G->fantasma[c].dir = UP;
-            else if (rand() % 4 == 0 && A_DOWN(c) != 'x') G->fantasma[c].dir = DOWN;
-            else if (rand() % 4 == 0 && A_LEFT(c) != 'x') G->fantasma[c].dir = LEFT;
-            else if (rand() % 4 == 0 && A_RIGHT(c) != 'x') G->fantasma[c].dir = RIGHT;
-            else if (A_UP(c) != 'x') G->fantasma[c].dir = UP;
-            else if (A_DOWN(c) != 'x') G->fantasma[c].dir = DOWN;
-            else if (A_LEFT(c) != 'x') G->fantasma[c].dir = LEFT;
-            else if (A_RIGHT(c) != 'x') G->fantasma[c].dir = RIGHT;
-    }
-    return;                                                      
+    rows = nrow;
+    cols = ncol;
+    if (A == NULL) return;
+    unsigned int i;
+    for (i = 0; i < nrow; ++i)
+        if(A[i] == NULL)
+            return;
+    arena = A;
+    return;
 }
 
 /* Set the position of the ghost id. */
