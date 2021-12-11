@@ -137,15 +137,15 @@ void snake_decrease(struct snake *s, unsigned int decrease_len) {
 /* Saves the snake into the filename. */
 void snake_save(struct snake *s, char *filename) {
     FILE *f = fopen(filename, "w");
-    char buffer[4] = {48, ',', 48, '\n'};
+    int buffer[3] = {0,0};
     struct snake *tmp;
     if(f == NULL || s == NULL)
         exit(1);
     tmp = s;
-    while(tmp->body->next != NULL){
-        buffer[0] = tmp->body->pos.i + 48;
-        buffer[2] = tmp->body->pos.j + 48;
-        fwrite(buffer, sizeof(char), sizeof(buffer), f);
+    while(tmp->body != NULL){
+        buffer[0] = tmp->body->pos.j + 48;
+        buffer[1] = tmp->body->pos.i + 48;
+        fprintf(f,"%d\n%d\n",buffer[0], buffer[1]);
         tmp->body = tmp->body->next;
     }
     free(tmp);
@@ -155,14 +155,22 @@ void snake_save(struct snake *s, char *filename) {
 
 /* Loads the snake from filename */
 struct snake *snake_read(char *filename) {
+    unsigned int i = 0;
     FILE *f;
     struct snake *s;
+    char buff_in[2] = {0,0};
+    s = calloc(1,sizeof(struct snake));
     f = fopen(filename, "r");
-    if(f == NULL)
-        exit(2);
-    s = snake_create(1,1);
-    fread(s, sizeof(struct snake), 1, f);
-    fclose(f);
+    if(f != NULL){
+        while(fscanf(f,"%c",buff_in[i]) != 0){
+            if(i % 2 == 0)
+                s->body->pos.j = (unsigned int)buff_in[i];
+            else
+                s->body->pos.i = (unsigned int)buff_in[i];
+            ++i;
+        }
+        s->length = (i/2);
+    }
     return s;    
 }
 
