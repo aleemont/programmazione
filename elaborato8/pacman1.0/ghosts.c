@@ -1,218 +1,269 @@
+/* INCLUSIVE & DEFINES */
+
 #define GHOSTS_STUD
 #ifdef GHOSTS_STUD
 
-
 #include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 #include "ghosts.h"
 #include "pacman.h"
 #include "matrix.h"
 
-#define IS_WALL(A,pos) (A[pos.i][pos.j] == URCORN_SYM || A[pos.i][pos.j] == ULCORN_SYM || \
-                        A[pos.i][pos.j] == VWALL_SYM  || A[pos.i][pos.j] == HWALL_SYM  || \
-                        A[pos.i][pos.j] == XWALL_SYM)
-#define ARENA arena
-#define MAX_ROW (rows - 1)
-#define MAX_COL (cols - 1)
-#define POS_I(id) (G->fantasma[id].pos.i)
-#define POS_J(id) (G->fantasma[id].pos.j)
+/* GLOBAL VARIABLES */
 
-/*moves ghost in a direction*/
-#define MOVE_UP(id) ((G->fantasma[id].pos.i == 0) ?  (G->fantasma[id].pos.i = MAX_ROW)  : (G->fantasma[id].pos.i -= 1))
-#define MOVE_DOWN(id) ((G->fantasma[id].pos.i == MAX_ROW) ? (G->fantasma[id].pos.i = 0) : (G->fantasma[id].pos.i += 1))
-#define MOVE_LEFT(id) ((G->fantasma[id].pos.j == 0) ? (G->fantasma[id].pos.j = MAX_COL) : (G->fantasma[id].pos.j -= 1))
-#define MOVE_RIGHT(id) ((G->fantasma[id].pos.j == MAX_COL)? (G->fantasma[id].pos.j = 0) : (G->fantasma[id].pos.j += 1))
-/*position x or position y of a cell in a direction from ghost*/
-#define SHOW_UP(a) ((G->fantasma[a].pos.i == 0) ? (MAX_ROW) : (G->fantasma[a].pos.i - 1))
-#define SHOW_DOWN(a) ((G->fantasma[a].pos.i == MAX_ROW)? (0) : (G->fantasma[a].pos.i + 1))
-#define SHOW_LEFT(a) ((G->fantasma[a].pos.j == 0) ? (MAX_COL) : (G->fantasma[a].pos.j - 1))
-#define SHOW_RIGHT(a) ((G->fantasma[a].pos.j == MAX_COL)? (0) : (G->fantasma[a].pos.j + 1))
-/*show cell in a direction*/
-#define A(a) ARENA[G->fantasma[a].pos.i][G->fantasma[a].pos.j]
-#define A_UP(a) ARENA[SHOW_UP(a)][G->fantasma[a].pos.j] 
-#define A_DOWN(a) ARENA[SHOW_DOWN(a)][G->fantasma[a].pos.j]
-#define A_LEFT(a) ARENA[G->fantasma[a].pos.i][SHOW_LEFT(a)]
-#define A_RIGHT(a) ARENA[G->fantasma[a].pos.i][SHOW_RIGHT(a)]
-
-#define IS_NORMAL G->fantasma[id].status == NORMAL
-
-struct ghost{
-    struct position pos; 
-    enum direction dir;
-    enum ghost_status status;
-    unsigned int id;
+static const struct position UNK_POSITION = {0, 0};
+typedef struct {
+  unsigned id;
+  enum direction dir;
+  struct position pos;  
+  enum ghost_status status;
+} ghost;
+struct ghosts {
+  unsigned int num_ghost;
+  ghost* arr;
 };
+static char** arena;
+static unsigned rows, cols;
 
-struct ghosts{
-    unsigned int n;
-    struct ghost *fantasma;
-};
+/* EXTRA FUNCTIONS PROTOTYPES */
 
-static char **arena;
-static unsigned int rows, cols, a, b, c;
+static enum direction returnHome(struct position ghostPos);
+static enum direction oppositeDirection(enum direction dir);
+static int isIllegal(struct position pos, struct ghosts* G);
+static int equalsPositions(struct position p1, struct position p2);
+static struct position newPosition(struct position pos, enum direction dir);
+static enum direction* otheAxisDirections(enum direction dir, enum direction* compDir);
+static int isIllegalForScared(struct position pos, struct ghosts* G, struct position pacmanPos);
+static enum direction* getDirectionToFollow(struct position g, struct position p, enum direction* r, int scared);
+static enum direction chase(struct position pacmanPos, struct position ghostPos, enum direction dir, struct ghosts* G, int scared);
 
-/* Create the ghosts data structure */
+/* MAIN FUNCTIONS */
+
+/* Create the ghosts data structure and assign it some defaults values */
 struct ghosts *ghosts_setup(unsigned int num_ghosts) {
   struct ghosts* g  = malloc(sizeof(struct ghosts));
   if(g == NULL) return NULL;
-  g->fantasma = calloc(num_ghosts, sizeof(struct ghost));
-  g->n = num_ghosts;
-  if(g->fantasma == NULL) return NULL;
+  g->arr = calloc(num_ghosts, sizeof(ghost));
+  g->num_ghost = num_ghosts;
+  if(g->arr == NULL) return NULL;
   unsigned int i;
-  for(i = 0; i < g->n; i++) {
+  for(i = 0; i < g->num_ghost; i++) {
     struct position p = {0, 0};
-    g->fantasma[i].id = i;
-    g->fantasma[i].dir = UNK_DIRECTION;
-    g->fantasma[i].pos = p;
-    g->fantasma[i].status = NORMAL;
+    g->arr[i].id = i;
+    g->arr[i].dir = UNK_DIRECTION;
+    g->arr[i].pos = p;
+    g->arr[i].status = NORMAL;
   }
   return g;
 }
 
-/* Destroy the ghost data structure */
+/* Destroy the ghost data structure freeing it*/
 void ghosts_destroy(struct ghosts *G) {
-    if(G != NULL)
-        if(G -> fantasma != NULL)
-            free(G->fantasma);
-        free(G);
-    return;
-    
+  free(G->arr);
+  free(G);
 }
 
 /* Set the arena (A) matrix */
-void ghosts_set_arena(struct ghosts *G, char **A, unsigned int nrow, 
-                                                      unsigned int ncol) {
-    rows = nrow;
-    cols = ncol;
-    if (A == NULL) return;
-    unsigned int i;
-    for (i = 0; i < nrow; ++i)
-        if(A[i] == NULL)
-            return;
-    arena = A;
-    return;
+void ghosts_set_arena(struct ghosts *G, char **A, unsigned int nrow, unsigned int ncol) {
+  rows = nrow;
+  cols = ncol;
+  if (A == NULL) return;
+  unsigned int i;
+  for (i = 0; i < nrow; ++i)
+    if(A[i] == NULL)
+      return;
+  arena = A;
 }
 
 /* Set the position of the ghost id. */
 void ghosts_set_position(struct ghosts *G, unsigned int id, struct position pos) {
-    if(G != NULL && G->fantasma->id >= 0 && G->fantasma->id < G->n){
-        G->fantasma[id].pos = pos;
-    }
-    return;
+  if(G == NULL) return;
+  G->arr[id].pos = pos;
 }
 
 /* Set the status of the ghost id. */
 void ghosts_set_status(struct ghosts *G, unsigned int id, enum ghost_status status) {
-    if(G != NULL && G->fantasma->id >= 0 && G->fantasma->id < G->n){
-        G->fantasma[id].status = status;   
-    }
-    return;
+  if(G == NULL) return;
+  G->arr[id].status = status;
 }
 
 /* Return the number of ghosts */
 unsigned int ghosts_get_number(struct ghosts *G) {
-    if(G != NULL)
-        return G->n;
-    return 0;
+  if(G != NULL) return G->num_ghost;
+  return 0;
 }
 
 /* Return the position of the ghost id. */
 struct position ghosts_get_position(struct ghosts *G, unsigned int id) {
-    struct position p;
-    if(G != NULL && G->fantasma->id >= 0 && G->fantasma->id < G->n){
-        p = G->fantasma[id].pos;
-    }
-    return p;
-
+  if(G == NULL) return UNK_POSITION;
+  return G->arr[id].pos;
 }
 
 /* Return the status of the ghost id. */
 enum ghost_status ghosts_get_status(struct ghosts *G, unsigned int id) {
-    return G->fantasma[id].status;
+  if(G == NULL) return -1;
+  return G->arr[id].status;
 }
 
 /* Move the ghost id (according to its status). Returns the new position */
-struct position ghosts_move(struct ghosts* G, struct pacman* P, unsigned int id) {
-    if (G != NULL && P != NULL) {
-        struct position pacman_pos = pacman_get_position(P);
-        int can_move[4] = { 1,1,1,1 };
+struct position ghosts_move(struct ghosts *G, struct pacman *P, unsigned int id) {
+  /* set the pacman and ghosts positions in 2 variables, in another one save the direction */
+  struct position ghostPos = G->arr[id].pos; 
+  struct position pacmanPos = pacman_get_position(P);
+  enum direction dir = G->arr[id].dir;
+  if(dir == UNK_DIRECTION) dir = UP;
+  enum direction newDir;
+  /* start checking the status of the ghost, changing direction and updating his position if legal */
+  switch (G->arr[id].status) {
+    case NORMAL:
+      newDir = chase(pacmanPos, ghostPos, dir, G, 0);
+      if(!isIllegal(newPosition(ghostPos, newDir), G)) 
+        ghostPos = newPosition(ghostPos, newDir);
+      break;
+    case SCARED_NORMAL: case SCARED_BLINKING:
+      newDir = chase(pacmanPos, ghostPos, dir, G, 1);
+      if(!isIllegalForScared(newPosition(ghostPos, newDir), G, pacmanPos))
+        ghostPos = newPosition(ghostPos, newDir);
+      break;
+    case EYES:
+      newDir = returnHome(ghostPos);
+      enum direction compDir[2];
+      otheAxisDirections(newDir, compDir);
+      if(!isIllegalForScared(newPosition(ghostPos, newDir), G, pacmanPos))
+        ghostPos = newPosition(ghostPos, newDir);
+      else if(!isIllegalForScared(newPosition(ghostPos, oppositeDirection(newDir)), G, pacmanPos))
+        ghostPos = newPosition(ghostPos, oppositeDirection(newDir));
+      else if(!isIllegalForScared(newPosition(ghostPos, compDir[0]), G, pacmanPos))
+        ghostPos = newPosition(ghostPos, compDir[0]);
+      else if(!isIllegalForScared(newPosition(ghostPos, compDir[1]), G, pacmanPos))
+        ghostPos = newPosition(ghostPos, compDir[1]);
+      break;
+    default:
+      newDir = UNK_DIRECTION;
+      break;
+  }
+  /* assigning the temporary variables to the ghost attributes */
+  G->arr[id].dir = newDir;
+  G->arr[id].pos = ghostPos;
+  return ghostPos;
+}
 
-        /*follow path in eyes status*/
-        if (G->fantasma[id].status == EYES) {
-            if (A(id) == 'U') G->fantasma[id].dir = UP;
-            if (A(id) == 'D') G->fantasma[id].dir = DOWN;
-            if (A(id) == 'L') G->fantasma[id].dir = LEFT;
-            if (A(id) == 'R') G->fantasma[id].dir = RIGHT;
-        }
+/* HELPER FUNCTIONS */
 
-        /*randomize direction*/
-        if (rand() % 20 == 0) {
-            G->fantasma[id].dir = rand() % 4;
-        }
+/* function to check if 2 positions are equals */
+static int equalsPositions(struct position p1, struct position p2) {
+  return (p1.i == p2.i && p1.j == p2.j);
+}
 
-        /*wall*/
-        if (A_UP(id) == 'x') can_move[0] = 0;
-        /*pacman (if status isn't normal)*/
-        if (IS_NORMAL && SHOW_UP(id) == pacman_pos.i && POS_J(id) == pacman_pos.j)
-            can_move[0] = 0;
-        /*ghosts*/
-        for (a = 0; a < G->n; a++) {
-            if (SHOW_UP(id) == POS_I(a) && POS_J(id) == POS_J(a)) can_move[0] = 0;
-        }
-        /*wall*/
-        if (A_DOWN(id) == 'x') can_move[1] = 0;
-        /*pacman (if status isn't normal)*/
-        if (IS_NORMAL && SHOW_DOWN(id) == pacman_pos.i && POS_J(id) == pacman_pos.j)
-            can_move[1] = 0;
-        /*ghosts*/
-        for (a = 0; a < G->n; a++) {
-            if (SHOW_DOWN(id) == POS_I(a) && POS_J(id) == POS_J(a)) can_move[1] = 0;
-        }
-        /*wall*/
-        if (A_LEFT(id) == 'x') can_move[2] = 0;
-        /*pacman (if status isn't normal)*/
-        if (IS_NORMAL && POS_I(id) == pacman_pos.i && SHOW_LEFT(id) == pacman_pos.j)
-            can_move[2] = 0;
-        /*ghosts*/
-        for (a = 0; a < G->n; a++) {
-            if (POS_I(id) == POS_I(a) && SHOW_LEFT(id) == POS_J(a)) can_move[2] = 0;
-        }
-        /*wall*/
-        if (A_RIGHT(id) == 'x') can_move[3] = 0;
-        /*pacman (if status isn't normal)*/
-        if (IS_NORMAL && POS_I(id) == pacman_pos.i && SHOW_RIGHT(id) == pacman_pos.j)
-            can_move[3] = 0;
-        /*ghosts*/
-        for (a = 0; a < G->n; a++) {
-            if (POS_I(id) == POS_I(a) && SHOW_RIGHT(id) == POS_J(a)) can_move[3] = 0;
-        }
-    
+/* function that return the opposite direction of the one in input */
+static enum direction oppositeDirection(enum direction dir) {
+  switch (dir) {
+    case UP: return DOWN; break;
+    case DOWN: return UP; break;
+    case LEFT: return RIGHT; break;
+    case RIGHT: return LEFT; break;
+    default: return -1; break;
+  }
+}
 
-        /*switch direction is original is already taken*/
-        if ((G->fantasma[id].dir == UP && !can_move[0]) ||
-            (G->fantasma[id].dir == DOWN && !can_move[1]) ||
-            (G->fantasma[id].dir == LEFT && !can_move[2]) ||
-            (G->fantasma[id].dir == RIGHT && !can_move[3])) {
-            if (can_move[0]) G->fantasma[id].dir = UP;
-            if (can_move[1]) G->fantasma[id].dir = DOWN;
-            if (can_move[2]) G->fantasma[id].dir = LEFT;
-            if (can_move[3]) G->fantasma[id].dir = RIGHT;
-        }
+/* get the direction that the ghost has to follow (vertical axis [0] and horizontal axis [1]) */
+static enum direction* getDirectionToFollow(struct position g, struct position p, enum direction* r, int scared) {
+  r[0] = -1; r[1] = -1;
+  if(g.i > p.i) r[0] = UP;
+  else if(g.i < p.i) r[0] = DOWN;
+  if(g.j > p.j)  r[1] = LEFT;
+  else if(g.j < p.j)  r[1] = RIGHT; 
+  if(r[0] == -1) r[0] = r[1];
+  if(r[1] == -1) r[1] = r[0];
+  if(scared) {
+    r[0] = oppositeDirection(r[0]);
+    r[1] = oppositeDirection(r[1]);
+  }
+  return r;
+}
 
-        /*moves if can_move*/
-        if (can_move[0] || can_move[1] || can_move[2] || can_move[3]) {
-            if (G->fantasma[id].dir == UP) MOVE_UP(id);
-            if (G->fantasma[id].dir == DOWN) MOVE_DOWN(id);
-            if (G->fantasma[id].dir == LEFT) MOVE_LEFT(id);
-            if (G->fantasma[id].dir == RIGHT) MOVE_RIGHT(id);
+/* return the new position of the object in input */
+static struct position newPosition(struct position pos, enum direction dir) {
+  switch (dir) {
+    case UP: pos.i = (pos.i+(rows-1)) % rows; break;
+    case DOWN: pos.i = (pos.i+1) % rows; break;
+    case RIGHT: pos.j = (pos.j+1) % cols; break;
+    case LEFT: pos.j = (pos.j+(cols-1)) % cols; break;
+    default: break;
+  }
+  return pos;
+}
+
+/* check if the position where the struct is going is illegal or not */
+static int isIllegal(struct position pos, struct ghosts* G) {
+  unsigned int i;
+  /* checking if is a ghost */
+  for(i = 0; i < G->num_ghost; ++i)
+    if(G->arr[i].pos.i == pos.i && G->arr[i].pos.j == pos.j)
+      return 1;
+  return (IS_WALL(arena, pos));
+}
+
+/* same of isIllegal() but check also if the new position will go into pacman */
+static int isIllegalForScared(struct position pos, struct ghosts* G, struct position pacmanPos) {
+  return isIllegal(pos, G) || equalsPositions(pos, pacmanPos);
+}
+
+/* return the complementary directions of a direction */
+static enum direction* otheAxisDirections(enum direction dir, enum direction* compDir) {
+  switch (dir) {
+    case UP: case DOWN:
+      compDir[0] = RIGHT;
+      compDir[1] = LEFT;
+      break;
+    case RIGHT: case LEFT:
+      compDir[0] = UP;
+      compDir[1] = DOWN;
+      break;
+    default: break;
+  }
+  return compDir;
+}
+
+/* function that returns the direction the ghost has to follow to chase pacman */
+static enum direction chase(struct position pacmanPos, struct position ghostPos, enum direction dir, struct ghosts* G, int scared) {
+  enum direction newDir;
+  enum direction possibleDirections[2];
+  getDirectionToFollow(ghostPos, pacmanPos, possibleDirections, scared);
+  /* choosing the best way to follow pacman (if on the vertical axis (default) or the horizontal) */
+  unsigned int index = 0;
+  if(abs((int)ghostPos.j - (int)pacmanPos.j) > abs((int)ghostPos.i - (int)pacmanPos.i)) index = 1;
+  newDir = possibleDirections[index];
+  if (isIllegal(newPosition(ghostPos, newDir), G) || (!scared && newDir == oppositeDirection(dir))) {
+    newDir = possibleDirections[!index];
+    if (isIllegal(newPosition(ghostPos, newDir), G) || (!scared && newDir == oppositeDirection(dir))) {
+      newDir = dir;
+      if (isIllegal(newPosition(ghostPos, newDir), G)) {
+        enum direction compDir[2];
+        otheAxisDirections(newDir, compDir);
+        index = 0;
+        if(abs((int)ghostPos.j - (int)pacmanPos.j) > abs((int)ghostPos.i - (int)pacmanPos.i)) index = 1;
+        newDir = compDir[index];
+        if (isIllegal(newPosition(ghostPos, newDir), G)) {
+          newDir = compDir[!index];
+          if (isIllegal(newPosition(ghostPos, newDir), G))
+            newDir = oppositeDirection(dir);
         }
-        return G->fantasma[id].pos;
+      }
     }
-    struct position p = { 0 };
-    return p;
+  }
+  return newDir;
+}
+
+/* function that return the direction the ghost has to follow to come back home */
+static enum direction returnHome(struct position ghostPos) {
+  char c = arena[ghostPos.i][ghostPos.j];
+  switch (c) {
+    case UP_SYM: return UP;
+    case RIGHT_SYM: return RIGHT;
+    case DOWN_SYM: return DOWN;
+    case LEFT_SYM: return LEFT;
+    default: return UNK_DIRECTION;
+  }
 }
 
 #endif
-
-

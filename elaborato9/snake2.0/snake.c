@@ -11,15 +11,21 @@ struct snake *snake_create(unsigned int rows, unsigned int cols) {
     struct position p;
     struct snake *head;
     b = (struct body *)malloc(sizeof(struct body));
-    p.i = rand() % rows;
-    p.j = rand() % cols;
-    b->next = NULL;
-    b->prev = NULL;
-    b->pos = p;
     head = (struct snake*) malloc(sizeof(struct snake));
-    head->body = b;
-    head->cols = cols;
-    head->rows = rows;
+    if(head != NULL){
+        p.i = rand() % rows;
+        p.j = rand() % cols;
+        b->next = NULL;
+        b->prev = NULL;
+        b->pos = p;
+
+        head->body = b;
+        head->cols = cols;
+        head->rows = rows;
+    }else{
+        free(b);
+        head = NULL;
+    }
     return head;
 } 
 
@@ -50,7 +56,8 @@ struct position snake_body(struct snake *s, unsigned int i) {
     struct body * b;
     register unsigned int k;
     if(s->length < i){
-        p = {-1, -1};
+        p.i = -1;
+        p.j = -1;
     }
     b = s->body;
     for(k = 0; k < i; ++k)
@@ -129,9 +136,18 @@ void snake_decrease(struct snake *s, unsigned int decrease_len) {
 /* Saves the snake into the filename. */
 void snake_save(struct snake *s, char *filename) {
     FILE *f = fopen(filename, "w");
-    if(f == NULL)
+    char buffer[4] = {48, ',', 48, '\n'};
+    struct snake *tmp;
+    if(f == NULL || s == NULL)
         exit(1);
-    fwrite(s, sizeof(struct snake), 1, f);
+    tmp = s;
+    while(tmp->body->next != NULL){
+        buffer[0] = tmp->body->pos.i + 48;
+        buffer[2] = tmp->body->pos.j + 48;
+        fwrite(buffer, sizeof(char), sizeof(buffer), f);
+        tmp->body = tmp->body->next;
+    }
+    free(tmp);
     fclose(f);
     return;
 }
