@@ -22,6 +22,7 @@ struct snake *snake_create(unsigned int rows, unsigned int cols) {
         head->body = b;
         head->cols = cols;
         head->rows = rows;
+        head->length = 1;
     }else{
         free(b);
         head = NULL;
