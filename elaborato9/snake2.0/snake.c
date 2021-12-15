@@ -143,8 +143,8 @@ void snake_save(struct snake *s, char *filename) {
         exit(1);
     tmp = s;
     while(tmp->body != NULL){
-        buffer[0] = tmp->body->pos.j + 48;
-        buffer[1] = tmp->body->pos.i + 48;
+        buffer[0] = tmp->body->pos.j;
+        buffer[1] = tmp->body->pos.i;
         fprintf(f,"%d\n%d\n",buffer[0], buffer[1]);
         tmp->body = tmp->body->next;
     }
@@ -158,7 +158,7 @@ struct snake *snake_read(char *filename) {
     unsigned int i = 0;
     FILE *f;
     struct snake *s;
-    char buff_in[2] = {0,0};
+    char buff_in[3] = {0,0};
     s = calloc(1,sizeof(struct snake));
     f = fopen(filename, "r");
     if(f != NULL){
